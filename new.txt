@@ -1,3 +1,4 @@
+나는 메인 브렌치야....
 total 54
 drwxr-xr-x 1 YUHAN 197121     0 May  8 14:35 ./
 drwxr-xr-x 1 YUHAN 197121     0 Apr 24 12:59 ../
