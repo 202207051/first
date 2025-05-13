@@ -1,0 +1,1 @@
+int mol(int x,int y);
