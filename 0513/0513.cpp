@@ -52,6 +52,7 @@ int main()
 
 	sortlotto(lotto);
 
+	printf("lotto: ");
 	for (j = 0; j < 6; j++) {
 		printf("%d ", lotto[j]);
 	}
