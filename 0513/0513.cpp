@@ -44,8 +44,8 @@ int main()
 	srand(time(NULL));
 
 	for (i = 0; i < 6; i++) {
-		lotto[i] = getlotto();
 		do {
+			lotto[i] = getlotto();
 			flag = checklotto(lotto, &i);
 		} while (flag);
 	}
