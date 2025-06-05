@@ -2,5 +2,12 @@
 
 int mul(int x, int y)
 {
-	return 0;
+	int num = 0;
+
+	for (int i = 0; i < y; i++)
+	{
+		num = add(num, x);
+	}
+
+	return num;
 }
