@@ -2,5 +2,15 @@
 
 int dive(int x, int y)
 {
-	return 0;
+	int num = x;
+	int cnt = 0;
+
+	while (num >= y)
+	{
+		num = sub(num, y);
+		cnt++;
+	}
+
+	return cnt;
+
 }
