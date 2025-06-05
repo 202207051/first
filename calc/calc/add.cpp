@@ -1,4 +1,6 @@
 int add(int x, int y)
 {
-	return 0;
+	int num = x + y;
+
+	return num;
 }
