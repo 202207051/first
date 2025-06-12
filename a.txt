@@ -1,0 +1,14 @@
+total 201
+drwxr-xr-x 1 YUHAN 197121      0 Jun 12 13:00 ./
+drwxr-xr-x 1 YUHAN 197121      0 Jun  9 08:41 ../
+drwxr-xr-x 1 YUHAN 197121      0 Jun 11 09:58 .git/
+-rw-r--r-- 1 YUHAN 197121   8367 Jun  2 10:37 .gitignore
+drwxr-xr-x 1 YUHAN 197121      0 May 28 14:26 0513/
+drwxr-xr-x 1 YUHAN 197121      0 Jun 10 11:46 0610/
+drwxr-xr-x 1 YUHAN 197121      0 Jun 11 09:54 0611/
+drwxr-xr-x 1 YUHAN 197121      0 May 22 14:04 202207051_박영환/
+-rw-r--r-- 1 YUHAN 197121  35823 May 22 14:04 LICENSE
+-rw-r--r-- 1 YUHAN 197121     67 May 22 14:04 README.md
+-rw-r--r-- 1 YUHAN 197121      0 Jun 12 13:00 a.txt
+drwxr-xr-x 1 YUHAN 197121      0 Jun  9 08:47 java work/
+-rw-r--r-- 1 YUHAN 197121 132397 Jun  5 14:53 testCollaborators.png
