@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #include <iostream>
+=======
+#include <stdio.h>
+>>>>>>> 8cd6f9554bdfe6189c9db623bed6a9095336d269
 
 int main()
 {
