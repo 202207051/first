@@ -1,0 +1,12 @@
+total 61
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:09 ./
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 ../
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 .git/
+-rw-r--r-- 1 YUHAN 197121  9377 Jun 24 15:06 .gitignore
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 .vscode/
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 0513/
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 202207051_박영환/
+-rw-r--r-- 1 YUHAN 197121 35823 Jun 24 15:06 LICENSE
+-rw-r--r-- 1 YUHAN 197121   125 Jun 24 15:06 README.md
+-rw-r--r-- 1 YUHAN 197121     0 Jun 24 15:09 a.txt
+drwxr-xr-x 1 YUHAN 197121     0 Jun 24 15:06 eclipse-workspace/
