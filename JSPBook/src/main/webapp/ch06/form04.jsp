@@ -1,0 +1,85 @@
+<%@ page contentType="text/html; charset=utf-8"%>
+<html>
+<head>
+<title>Form Processing</title>
+</head>
+<body>
+
+	<h3>회원 가입</h3>
+
+	<form action="form04_process.jsp" name="member" method="POST">
+
+		<div>
+			<label for="userId">아이디</label> <input type="text" id="userId"
+				name="id">
+			<button type="button">아이디 중복 검사</button>
+		</div>
+
+		<div>
+			<label for="userPasswd">비밀번호</label> <input type="password"
+				id="userPasswd" name="passwd">
+		</div>
+
+		<div>
+			<label for="userName">이름</label> <input type="text" id="userName"
+				name="name">
+		</div>
+
+		<p>
+			이메일 : <input type="text" name="email_id">@ <select
+				name="email_domain">
+				<option value="naver.com">naver.com</option>
+				<option value="gmail.com">gmail.com</option>
+				<option value="daum.com">daum.com</option>
+			</select>
+		<div>
+			<label for="phone1">연락처</label> <input type="text" id="phone1"
+				name="phone1" maxlength="4" size="4"> - <input type="text"
+				name="phone2" maxlength="4" size="4"> - <input type="text"
+				name="phone3" maxlength="4" size="4">
+		</div>
+
+		<fieldset>
+			<legend>성별</legend>
+			<input type="radio" id="male" name="sex" value="남성" checked>
+			<label for="male">남성</label> <input type="radio" id="female"
+				name="sex" value="여성"> <label for="female">여성</label>
+		</fieldset>
+
+		<fieldset>
+			<legend>취미</legend>
+			<input type="checkbox" id="hobby1" name="hobby1" value="reading"
+				checked> <label for="hobby1">독서</label> <input
+				type="checkbox" id="hobby2" name="hobby2" value="exercise">
+			<label for="hobby2">운동</label> <input type="checkbox" id="hobby3"
+				name="hobby3" value="movie"> <label for="hobby3">영화</label>
+		</fieldset>
+
+		<div>
+			<input type="submit" value="가입하기"> <input type="reset"
+				value="다시쓰기">
+		</div>
+
+		<p>
+			연락처 : <select name="phone1">
+				<option value="010">010</option>
+				<option value="011">011</option>
+				<option value="016">016</option>
+				<option value="017">017</option>
+				<option value="019">019</option>
+			</select> - <input type="text" maxlength="4" size="4" name="phone2"> -
+			<input type="text" maxlength="4" size="4" name="phone3">
+		</p>
+
+		<form action="#" method="get">
+			<textarea name="comment" cols="30" rows="3"></textarea>
+			<p>
+				<input type="submit" value="전송" /> <input type="reset" value="취소" />
+			</p>
+
+		</form>
+
+	</form>
+
+</body>
+</html>
