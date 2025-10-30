@@ -45,7 +45,7 @@ from emp;
 select ename, hiredate
 from emp
 where job = 'SALESMAN'
-order by sal DESC;
+order by sal desc;
 
 select deptno, ename, job
 from emp
@@ -68,7 +68,12 @@ select deptno, count(*) as cnt_emp
 from emp
 group by deptno
 having count(*) >= 5
-order by count(*) DESC;
+order by count(*) desc;
+
+select ename, sal
+from emp
+where rownum <= 3
+order by sal desc;
 
 select *
 from emp
