@@ -11,6 +11,11 @@ HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
 
+#define TIMER_ID 100
+int g_rectSize = 100;                           // 사각형의 현재 크기 (50x50 ~ 100x100 사이 변화)
+int g_stepCount = 0;                            // 현재 애니메이션 단계 횟수
+bool g_isDecreasing = true;                     // 크기가 감소 중인지 여부
+
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
 BOOL                InitInstance(HINSTANCE, int);
@@ -18,9 +23,9 @@ LRESULT CALLBACK    WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK    About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                     _In_opt_ HINSTANCE hPrevInstance,
-                     _In_ LPWSTR    lpCmdLine,
-                     _In_ int       nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR    lpCmdLine,
+    _In_ int       nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
@@ -33,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     MyRegisterClass(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
-    if (!InitInstance (hInstance, nCmdShow))
+    if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
     }
@@ -52,7 +57,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         }
     }
 
-    return (int) msg.wParam;
+    return (int)msg.wParam;
 }
 
 
@@ -68,47 +73,49 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 
     wcex.cbSize = sizeof(WNDCLASSEX);
 
-    wcex.style          = CS_HREDRAW | CS_VREDRAW;
-    wcex.lpfnWndProc    = WndProc;
-    wcex.cbClsExtra     = 0;
-    wcex.cbWndExtra     = 0;
-    wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
-    wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
-    wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_WINDOWSPROJECT1);
-    wcex.lpszClassName  = szWindowClass;
-    wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
+    wcex.style = CS_HREDRAW | CS_VREDRAW;
+    wcex.lpfnWndProc = WndProc;
+    wcex.cbClsExtra = 0;
+    wcex.cbWndExtra = 0;
+    wcex.hInstance = hInstance;
+    wcex.hIcon = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WINDOWSPROJECT1));
+    wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
+    wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wcex.lpszMenuName = MAKEINTRESOURCEW(IDC_WINDOWSPROJECT1);
+    wcex.lpszClassName = szWindowClass;
+    wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
     return RegisterClassExW(&wcex);
 }
 
 //
-//   함수: InitInstance(HINSTANCE, int)
+//    함수: InitInstance(HINSTANCE, int)
 //
-//   용도: 인스턴스 핸들을 저장하고 주 창을 만듭니다.
+//    용도: 인스턴스 핸들을 저장하고 주 창을 만듭니다.
 //
-//   주석:
+//    주석:
 //
-//        이 함수를 통해 인스턴스 핸들을 전역 변수에 저장하고
-//        주 프로그램 창을 만든 다음 표시합니다.
+//          이 함수를 통해 인스턴스 핸들을 전역 변수에 저장하고
+//          주 프로그램 창을 만든 다음 표시합니다.
 //
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-   hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
 
-   HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-      CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
-   if (!hWnd)
-   {
-      return FALSE;
-   }
+    if (!hWnd)
+    {
+        return FALSE;
+    }
 
-   ShowWindow(hWnd, nCmdShow);
-   UpdateWindow(hWnd);
+    SetTimer(hWnd, TIMER_ID, 100, NULL);
 
-   return TRUE;
+    ShowWindow(hWnd, nCmdShow);
+    UpdateWindow(hWnd);
+
+    return TRUE;
 }
 
 //
@@ -121,56 +128,105 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
-
-int g_x, g_y;
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_MOUSEMOVE:
-    {
-        int x = LOWORD(lParam);
-        int y = HIWORD(lParam);
-        HDC hdc = GetDC(hWnd);
-
-        //MessageBox(hWnd, L"야호", L"눌렀다", MB_OK);
-
-        MoveToEx(hdc, g_x, g_y, NULL);
-        ReleaseDC(hWnd, hdc);
-    }
-        break;
     case WM_COMMAND:
+    {
+        int wmId = LOWORD(wParam);
+        // 메뉴 선택을 구문 분석합니다:
+        switch (wmId)
         {
-            int wmId = LOWORD(wParam);
-            // 메뉴 선택을 구문 분석합니다:
-            switch (wmId)
-            {
-            case IDM_ABOUT:
-                DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
-                break;
-            case IDM_EXIT:
-                DestroyWindow(hWnd);
-                break;
-            default:
-                return DefWindowProc(hWnd, message, wParam, lParam);
-            }
+        case IDM_ABOUT:
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
+            break;
+        case IDM_EXIT:
+            DestroyWindow(hWnd);
+            break;
+        default:
+            return DefWindowProc(hWnd, message, wParam, lParam);
         }
-        break;
-    case WM_PAINT:
-        {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+    }
+    break;
 
-            MoveToEx(hdc, 10, 10, NULL);
-            LineTo(hdc, 100, 100);
-            EndPaint(hWnd, &ps);
+    case WM_TIMER:
+    {
+        if (wParam == TIMER_ID)
+        {
+            if (g_isDecreasing)
+            {
+                if (g_stepCount < 5)
+                {
+                    g_rectSize -= 10; 
+                    g_stepCount++;
+                }
+                else
+                {
+                    g_isDecreasing = false;
+                    g_stepCount = 0;
+                }
+            }
+            else
+            {
+                if (g_stepCount < 5)
+                {
+                    g_rectSize += 10; 
+                    g_stepCount++;
+                }
+                else
+                {
+                    g_isDecreasing = true;
+                    g_stepCount = 0;
+                }
+            }
+
+            InvalidateRect(hWnd, NULL, TRUE);
         }
-        break;
+    }
+    break;
+
+    case WM_PAINT:
+    {
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+
+        // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
+
+        RECT clientRect;
+        GetClientRect(hWnd, &clientRect);
+
+        int rectCount = 5;
+        int spacing = 20; 
+        int rectBaseSize = 100;
+
+        int totalWidth = (rectBaseSize * rectCount) + (spacing * (rectCount - 1));
+
+        int startX = (clientRect.right - clientRect.left - totalWidth) / 2;
+        int centerY = (clientRect.bottom - clientRect.top) / 2;
+
+        for (int i = 0; i < rectCount; ++i)
+        {
+            int currentSize = g_rectSize;
+
+            int left = startX + (i * (rectBaseSize + spacing)) + (rectBaseSize - currentSize) / 2;
+            int top = centerY - currentSize / 2;
+
+            int right = left + currentSize;
+            int bottom = top + currentSize;
+
+            Rectangle(hdc, left, top, right, bottom);
+        }
+
+        EndPaint(hWnd, &ps);
+    }
+    break;
+
     case WM_DESTROY:
+        KillTimer(hWnd, TIMER_ID);
         PostQuitMessage(0);
         break;
+
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
     }
