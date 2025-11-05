@@ -1,8 +1,8 @@
-﻿// 1028.cpp : 애플리케이션에 대한 진입점을 정의합니다.
+﻿// 1104.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
 #include "framework.h"
-#include "1028.h"
+#include "1104.h"
 
 #define MAX_LOADSTRING 100
 
@@ -29,7 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY1028, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY1104, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
@@ -38,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY1028));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY1104));
 
     MSG msg;
 
@@ -73,10 +73,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY1028));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY1104));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY1028);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY1104);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -122,108 +122,136 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 //
 
-LPARAM g_lParam;
 
-// 스레드 함수
-DWORD WINAPI pig(LPVOID param)
+// 스레드 함수에서 받을 인수 구조체
+typedef struct data_staruct
 {
-    HWND hWnd = (HWND)param;
-    int x = LOWORD(g_lParam);
-    int y = HIWORD(g_lParam);
-    HDC hdc = GetDC(hWnd);
+    HWND m_hWnd;
+    LPARAM m_lParam;
+}DS, * PDS;
+
+// 공유 자원
+int g_x;
+
+ HANDLE g_sem;
+//자료형 선언
+CRITICAL_SECTION g_cs;
+
+DWORD WINAPI func(LPVOID param)
+{
+    PDS DS = (PDS)param;
+    int x = LOWORD(DS->m_lParam);
+    int y = HIWORD(DS->m_lParam);
+    HDC hdc = GetDC(DS->m_hWnd);
 
     for (int i = 0;i < y;i++)
     {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
+        WaitForSingleObject(g_sem,INFINITE);
+        g_x = x;
+        MoveToEx(hdc, g_x, 0, NULL);
+        Sleep(100); // 강제 문맥교환
+        LineTo(hdc, g_x, i);
+        // 임계영역 종료
+        ReleaseSemaphore(g_sem, 1, NULL);
     }
 
-    ReleaseDC(hWnd, hdc);
 
-    // OS에게 현재 쓰레드를 아름답게 종료시켜 주세요.
-    ExitThread(0);
-    return 0;
+
+    ReleaseDC(DS->m_hWnd, hdc);
+    ExitThread(0);  //OS에게 자원 정리 요청
+    return 0;       //반환 값
 }
 
-HWND g_hWnd;
-// 스레드 함수 : hWnd를 전역 변수로 선언하고 실행
-DWORD WINAPI pig1(LPVOID param)
+/*
+DWORD WINAPI func(LPVOID param)
 {
-    LPARAM lParam = (LPARAM)param;
-    int x = LOWORD(lParam);
-    int y = HIWORD(lParam);
-    HDC hdc = GetDC(g_hWnd);
+    PDS DS = (PDS)param;
+    int x = LOWORD(DS->m_lParam);
+    int y = HIWORD(DS->m_lParam);
+    HDC hdc = GetDC(DS->m_hWnd);
 
     for (int i = 0;i < y;i++)
     {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
+        EnterCriticalSection(&g_cs);
+        // 임계영역 시작
+        g_x = x;
+        MoveToEx(hdc, g_x, 0, NULL);
+        LineTo(hdc, g_x, i);
+        // 임계영역 종료
+        LeaveCriticalSection(&g_cs);
+        Sleep(100);
     }
 
-    ReleaseDC(g_hWnd, hdc);
-    ExitThread(0);
-    return 0;
-}
 
-// 일반 함수
-void draw(LPARAM lParam, HWND hWnd)
+
+    ReleaseDC(DS->m_hWnd, hdc);
+    ExitThread(0);  //OS에게 자원 정리 요청
+    return 0;       //반환 값
+}
+*/
+
+/* //소프트웨어 적인 해결방법 예제 : 실패
+// 플레그 변수
+// FALSE : 자원을 아무도 사용하지 않은 상태
+// TRUE :  자원을 누군가 사용하고 있는 상태
+BOOL g_used = FALSE;
+
+// 스레드 함수의 동기화 문제 : SW적인 해결 방법 시도
+DWORD WINAPI func(LPVOID param)
 {
-    int x = LOWORD(lParam);
-    int y = HIWORD(lParam);
-    HDC hdc = GetDC(hWnd);
+    PDS DS = (PDS)param;
+    int x = LOWORD(DS->m_lParam);
+    int y = HIWORD(DS->m_lParam);
+    HDC hdc = GetDC(DS->m_hWnd);
 
     for (int i = 0;i < y;i++)
-    {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
+    {     
+        // 데커(상호배제) 알고리즘 : 대기
+        while (TRUE == g_used)
+        {
+            //대기 상태
+        }
+            g_used = TRUE;  //공유 자원 사용중!!!!
+            g_x = x;
+            // 문잭교환 발생
+            MoveToEx(hdc, g_x, 0, NULL);
+            LineTo(hdc, g_x, i);
+            g_used = FALSE; //공유 자원을 다 사용했음!!!
+            Sleep(100);
     }
 
-    ReleaseDC(hWnd, hdc);
+    ReleaseDC(DS->m_hWnd, hdc);
+    ExitThread(0);  //OS에게 자원 정리 요청
+    return 0;       //반환 값
 }
-
-HANDLE g_handle[10];
-int g_cnt;
+*/
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_RBUTTONDOWN:
+    case WM_CREATE:
     {
-        // 스레드 제어 : 일시 중단
-        for (int i = 0;i < 10;i++)
-        {
-            SuspendThread(g_handle[i]);
-        }
+        // 동기화 객체 Critical Section 생성
+        InitializeCriticalSection(&g_cs);
+        //Sempaphore 자료형 초기화
+        g_sem = CreateSemaphore(NULL, 3, 3, NULL);
+    }
+        break;
+    case WM_LBUTTONDOWN:
+    {
+        // 스레드 생성을 위한 정보체 생성과 설정
+        DS ds = { 0, };
+        ds.m_hWnd = hWnd;
+        ds.m_lParam = lParam;
+
+        // 스레드 생성
+        CreateThread(NULL, 0, func, &ds, 0, NULL);
     }
     break;
 
-    case WM_KEYDOWN:
-    {
-        // 스레드 제어 : 다시 시작
-        for (int i = 0;i < 10;i++)
-        {
-            ResumeThread(g_handle[i]);
-        }
-    }
-        break;
     case WM_COMMAND:
         {
-    case WM_LBUTTONDOWN:
-    {
-        g_lParam = lParam;
-        //CreateThread(NULL,0, pig, (LPVOID)hWnd, 0, NULL);
-
-        g_hWnd = hWnd;
-        g_handle[g_cnt++] = CreateThread(NULL, 0, pig1, (LPVOID)lParam, 0, NULL);
-        
-        // 일반 함수 호출
-        //draw(lParam, hWnd);
-    }
-        break;
             int wmId = LOWORD(wParam);
             // 메뉴 선택을 구문 분석합니다:
             switch (wmId)
@@ -247,7 +275,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             EndPaint(hWnd, &ps);
         }
         break;
-    case WM_DESTROY:
+    case WM_DESTROY:    
+        // 동기화 객체 Critical Section 해체
+        DeleteCriticalSection(&g_cs);
+        //세마포어 종료
+        CloseHandle(g_sem);
         PostQuitMessage(0);
         break;
     default:

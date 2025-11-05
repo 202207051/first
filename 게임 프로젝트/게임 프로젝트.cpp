@@ -1,8 +1,8 @@
-﻿// 1028.cpp : 애플리케이션에 대한 진입점을 정의합니다.
+﻿// 게임 프로젝트.cpp : 애플리케이션에 대한 진입점을 정의합니다.
 //
 
 #include "framework.h"
-#include "1028.h"
+#include "게임 프로젝트.h"
 
 #define MAX_LOADSTRING 100
 
@@ -29,7 +29,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadStringW(hInstance, IDC_MY1028, szWindowClass, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDC_MY, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
     // 애플리케이션 초기화를 수행합니다:
@@ -38,7 +38,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
         return FALSE;
     }
 
-    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY1028));
+    HACCEL hAccelTable = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDC_MY));
 
     MSG msg;
 
@@ -73,10 +73,10 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     wcex.cbClsExtra     = 0;
     wcex.cbWndExtra     = 0;
     wcex.hInstance      = hInstance;
-    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY1028));
+    wcex.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_MY));
     wcex.hCursor        = LoadCursor(nullptr, IDC_ARROW);
     wcex.hbrBackground  = (HBRUSH)(COLOR_WINDOW+1);
-    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY1028);
+    wcex.lpszMenuName   = MAKEINTRESOURCEW(IDC_MY);
     wcex.lpszClassName  = szWindowClass;
     wcex.hIconSm        = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_SMALL));
 
@@ -121,109 +121,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
 //
 //
-
-LPARAM g_lParam;
-
-// 스레드 함수
-DWORD WINAPI pig(LPVOID param)
-{
-    HWND hWnd = (HWND)param;
-    int x = LOWORD(g_lParam);
-    int y = HIWORD(g_lParam);
-    HDC hdc = GetDC(hWnd);
-
-    for (int i = 0;i < y;i++)
-    {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
-    }
-
-    ReleaseDC(hWnd, hdc);
-
-    // OS에게 현재 쓰레드를 아름답게 종료시켜 주세요.
-    ExitThread(0);
-    return 0;
-}
-
-HWND g_hWnd;
-// 스레드 함수 : hWnd를 전역 변수로 선언하고 실행
-DWORD WINAPI pig1(LPVOID param)
-{
-    LPARAM lParam = (LPARAM)param;
-    int x = LOWORD(lParam);
-    int y = HIWORD(lParam);
-    HDC hdc = GetDC(g_hWnd);
-
-    for (int i = 0;i < y;i++)
-    {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
-    }
-
-    ReleaseDC(g_hWnd, hdc);
-    ExitThread(0);
-    return 0;
-}
-
-// 일반 함수
-void draw(LPARAM lParam, HWND hWnd)
-{
-    int x = LOWORD(lParam);
-    int y = HIWORD(lParam);
-    HDC hdc = GetDC(hWnd);
-
-    for (int i = 0;i < y;i++)
-    {
-        MoveToEx(hdc, x, 0, NULL);
-        LineTo(hdc, x, i);
-        Sleep(1);     //인터럽트, 스케쥴러, 양보
-    }
-
-    ReleaseDC(hWnd, hdc);
-}
-
-HANDLE g_handle[10];
-int g_cnt;
-
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    case WM_RBUTTONDOWN:
-    {
-        // 스레드 제어 : 일시 중단
-        for (int i = 0;i < 10;i++)
-        {
-            SuspendThread(g_handle[i]);
-        }
-    }
-    break;
-
-    case WM_KEYDOWN:
-    {
-        // 스레드 제어 : 다시 시작
-        for (int i = 0;i < 10;i++)
-        {
-            ResumeThread(g_handle[i]);
-        }
-    }
-        break;
     case WM_COMMAND:
         {
-    case WM_LBUTTONDOWN:
-    {
-        g_lParam = lParam;
-        //CreateThread(NULL,0, pig, (LPVOID)hWnd, 0, NULL);
-
-        g_hWnd = hWnd;
-        g_handle[g_cnt++] = CreateThread(NULL, 0, pig1, (LPVOID)lParam, 0, NULL);
-        
-        // 일반 함수 호출
-        //draw(lParam, hWnd);
-    }
-        break;
             int wmId = LOWORD(wParam);
             // 메뉴 선택을 구문 분석합니다:
             switch (wmId)
