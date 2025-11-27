@@ -10,6 +10,7 @@
 HINSTANCE hInst;                                // 현재 인스턴스입니다.
 WCHAR szTitle[MAX_LOADSTRING];                  // 제목 표시줄 텍스트입니다.
 WCHAR szWindowClass[MAX_LOADSTRING];            // 기본 창 클래스 이름입니다.
+DWORD g_pPid = 0;
 
 // 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -26,6 +27,10 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 	UNREFERENCED_PARAMETER(lpCmdLine);
 
 	// TODO: 여기에 코드를 입력합니다.
+	if (lpCmdLine && *lpCmdLine)
+	{
+		g_pPid = wcstol(lpCmdLine, NULL, 10);
+	}
 
 	// 전역 문자열을 초기화합니다.
 	LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
@@ -124,10 +129,14 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
 PROCESS_INFORMATION pi1;
 PROCESS_INFORMATION pi2;
+<<<<<<< HEAD
 PROCESS_INFORMATION pi3;
 DWORD process = 0;
 DWORD thread = 0;
 HWND hWnd;
+=======
+HWND hWNd;
+>>>>>>> f4a5840d90493f05ec6df85ef951800f52ab8c4a
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -137,7 +146,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	{
 		STARTUPINFO si1 = { 0, };
 		STARTUPINFO si2 = { 0, };
+		si1.cb = sizeof(STARTUPINFO);
+		si2.cb = sizeof(STARTUPINFO);
 
+<<<<<<< HEAD
 		wchar_t pName2[32] = L"202207051 박영환-(12).exe";
 		CreateProcess(NULL, pName2, NULL, NULL, FALSE, 0, NULL, NULL, &si2, &pi2);
 
@@ -151,10 +163,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		pi3.dwThreadId = thread;
 
 		InvalidateRect(hWnd, NULL, TRUE);
+=======
+		wchar_t pName1[128] = L"mspaint.exe";
+		CreateProcess(NULL, pName1, NULL, NULL, FALSE, 0, NULL, NULL, &si1, &pi1);
+
+		wchar_t pBuff[128] = { 0, };
+		wsprintf(pBuff, L"%d", pi1.dwProcessId);
+
+		wchar_t pName2[256] = { 0, };
+		wsprintf(pName2, L"202207051 박영환-(12).exe %s", pBuff);
+		CreateProcess(NULL, pName2, NULL, NULL, FALSE, 0, NULL, NULL, &si2, &pi2);
+
+		InvalidateRect(hWnd, NULL, TRUE);
+
+		CloseHandle(pi1.hProcess);
+		CloseHandle(pi1.hThread);
+		CloseHandle(pi2.hProcess);
+		CloseHandle(pi2.hThread);
+>>>>>>> f4a5840d90493f05ec6df85ef951800f52ab8c4a
 	}
 	break;
 	case WM_RBUTTONDOWN:
 	{
+<<<<<<< HEAD
+=======
+		if (g_pPid != 0)
+		{
+			HANDLE hProcess = OpenProcess(PROCESS_TERMINATE, FALSE, g_pPid);
+
+			if (hProcess != NULL)
+			{
+				TerminateProcess(hProcess, 0);
+				CloseHandle(hProcess);
+				g_pPid = 0;
+			}
+		}
+
+>>>>>>> f4a5840d90493f05ec6df85ef951800f52ab8c4a
 		InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
@@ -196,12 +241,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		wsprintf(buf, L"msPaint Process Info : PID[ %d ] TID[ %d ]",
 			pi1.dwProcessId, pi1.dwThreadId);
 		TextOut(hdc, 10, 40, buf, lstrlen(buf));
+<<<<<<< HEAD
 
 		memset(buf, 0x00, 128);
 
 		wsprintf(buf, L"pi3 Process Info : PID[ %d ] TID[ %d ]",
 			pi3.dwProcessId, pi3.dwThreadId);
 		TextOut(hdc, 10, 55, buf, lstrlen(buf));
+=======
+>>>>>>> f4a5840d90493f05ec6df85ef951800f52ab8c4a
 		EndPaint(hWnd, &ps);
 	}
 	break;
