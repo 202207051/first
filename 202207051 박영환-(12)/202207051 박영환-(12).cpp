@@ -125,6 +125,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 PROCESS_INFORMATION pi1;
 PROCESS_INFORMATION pi2;
 PROCESS_INFORMATION pi3;
+DWORD process = 0;
+DWORD thread = 0;
+HWND hWnd;
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -137,14 +140,22 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		wchar_t pName2[32] = L"202207051 박영환-(12).exe";
 		CreateProcess(NULL, pName2, NULL, NULL, FALSE, 0, NULL, NULL, &si2, &pi2);
+
 		wchar_t pName1[32] = L"mspaint.exe";
 		CreateProcess(NULL, pName1, NULL, NULL, FALSE, 0, NULL, NULL, &si1, &pi1);
+
+		process = pi1.dwProcessId;
+		thread = pi1.dwThreadId;
+
+		pi3.dwProcessId = process;
+		pi3.dwThreadId = thread;
+
+		InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
 	case WM_RBUTTONDOWN:
 	{
-		wchar_t pName3[32] = L"taskkill /f /pid %d";
-
+		InvalidateRect(hWnd, NULL, TRUE);
 	}
 	break;
 	case WM_COMMAND:
@@ -188,8 +199,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		memset(buf, 0x00, 128);
 
-		//wsprintf(buf, L"Parent Process Info : PID[ %d ] TID[ %d ]",
-			//pi3_Process, pi3_Thread);
+		wsprintf(buf, L"pi3 Process Info : PID[ %d ] TID[ %d ]",
+			pi3.dwProcessId, pi3.dwThreadId);
 		TextOut(hdc, 10, 55, buf, lstrlen(buf));
 		EndPaint(hWnd, &ps);
 	}
