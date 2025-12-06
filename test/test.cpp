@@ -4,7 +4,6 @@
 #include "framework.h"
 #include "test.h"
 #include <stdio.h> // swprintf_s 사용을 위함
-#include <windows.h>
 
 #define MAX_LOADSTRING 100
 
@@ -17,14 +16,14 @@ const int GRID_SIZE = 4;
 // 셀 크기 및 모드 시작 위치
 const int CELL_SIZE = 70;
 const int BOARD_START_X = 20; // 현재 선택된 행(-1 : 선택되지 않음)
-const int BOARD_START_Y = 20; // 현재 선택된 열(-1 : 선택되지 않음)
+const int BOARD_START_y = 20; // 현재 선택된 열(-1 : 선택되지 않음)
 
 // SudokuGrid 자료형 선언
 typedef int SudokuGrid[GRID_SIZE][GRID_SIZE];
 
 // 게임 상태 변수
 int selectedRow = -1; // 현재 행이 선택되지 않음
-int selectedCol = -1; // 현재 열이 선택되지 않음
+int selectedCOl = -1; // 현재 열이 선택되지 않음
 
 // 4 * 4 문제
 SudokuGrid initalPuzzle{
@@ -210,11 +209,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         // 클릭이 보드판 영역에 있는지 확인
         if (x >= BOARD_START_X && x < BOARD_START_X + boardWidth &&
-            y >= BOARD_START_Y && y < BOARD_START_Y + boardHeight)
+            y >= BOARD_START_y && y < BOARD_START_y + boardHeight)
         {
             // 픽셀 좌표를 행(Row)과 열(Col) 인덱스로 변환
-            selectedCol = (x - BOARD_START_X) / CELL_SIZE;
-            selectedRow = (y - BOARD_START_Y) / CELL_SIZE;
+            selectedCOl = (x - BOARD_START_X) / CELL_SIZE;
+            selectedRow = (y - BOARD_START_y) / CELL_SIZE;
 
             // 창 다시 그리기
             InvalidateRect(hWnd, NULL, TRUE);
@@ -222,7 +221,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         else
         {
             // 보드판 밖의 영역 클릭 처리
-            selectedCol = -1;
+            selectedCOl = -1;
             selectedRow = -1;
 
             // 창 다시 그리기
@@ -233,10 +232,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CHAR:
     {
         // 셀이 선택되었는지 확인
-        if (selectedRow != -1 && selectedCol != -1)
+        if (selectedRow != -1 && selectedCOl != -1)
         {
             // 선택된 칸이 질문칸인지 확인
-            BOOL isQuestionCell = (initalPuzzle[selectedRow][selectedCol] != 0);
+            BOOL isQuestionCell = (initalPuzzle[selectedRow][selectedCOl] != 0);
 
             // 문제칸 입력 처리
             if (!isQuestionCell)
@@ -250,10 +249,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 }
 
                 // 유효한 숫자(1 ~ 4)가 입력된 경우
-                if (inputNum != -1)
+                if(inputNum!=-1)
                 {
-                    currentGame[selectedRow][selectedCol] = inputNum;
-                    InvalidateRect(hWnd, NULL, TRUE);
+                    currentGame[selectedRow][selectedCOl]=inputNum;
+                    InvalidateRect(hWnd,NULL,TRUE);
                 }
             }
         }
@@ -262,10 +261,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_KEYDOWN:
     {
         // 지우기 처리
-        if ((wParam == VK_BACK || wParam == VK_DELETE) && selectedRow != -1 && selectedCol != -1 && initalPuzzle[selectedRow][selectedCol] == 0)
+        if (wParam == VK_BACK || wParam == DELETE)
         {
-            currentGame[selectedRow][selectedCol] = 0;
-            InvalidateRect(hWnd, NULL, TRUE);
+            currentGame[selectedRow][selectedCOl]=0;
+            InvalidateRect(hWnd,NULL,TRUE);
             break;
         }
     }
@@ -302,11 +301,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CREATE:
     {
-        int boardEnd_Y = BOARD_START_Y + GRID_SIZE * CELL_SIZE; // 보드판 끝 y 좌표
-        int button_Y = boardEnd_Y + 20;                         // 보드판 아래 20픽셀 떨어진 곳
+        int boardEnd_y = BOARD_START_y + GRID_SIZE * CELL_SIZE; // 보드판 끝 y 좌표
+        int button_y = boardEnd_y + 20;                         // 보드판 아래 20픽셀 떨어진 곳
 
         // 버튼 생성
-        g_button = CreateWindow(L"Button", L"checkAnwer", WS_CHILD | WS_VISIBLE, BOARD_START_X, button_Y, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
+        g_button = CreateWindow(L"BUtton", L"checkAnser", WS_CHILD | WS_VISIBLE, BOARD_START_X, button_y, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
     }
     break;
     case WM_PAINT:
@@ -326,12 +325,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             for (int j = 0; j < GRID_SIZE; j++)
             {
                 int x1 = BOARD_START_X + j * CELL_SIZE;
-                int y1 = BOARD_START_Y + i * CELL_SIZE;
+                int y1 = BOARD_START_y + i * CELL_SIZE;
                 int x2 = x1 + CELL_SIZE;
                 int y2 = y1 + CELL_SIZE;
 
                 // 선택된 셀 강조
-                if (i == selectedRow && j == selectedCol)
+                if (i == selectedRow && j == selectedCOl)
                 {
                     HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255));
                     RECT cellRect = {x1 + 1, y1 + 1, x2, y2};
@@ -376,11 +375,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         for (int i = 0; i <= GRID_SIZE; i += 2)
         {
             // 수직선
-            MoveToEx(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_Y, NULL);
-            LineTo(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_Y + GRID_SIZE * CELL_SIZE);
+            MoveToEx(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_y, NULL);
+            LineTo(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_y + GRID_SIZE * CELL_SIZE);
             // 수평선
-            MoveToEx(hdc, BOARD_START_X, BOARD_START_Y + i * CELL_SIZE, NULL);
-            LineTo(hdc, boardEnd, BOARD_START_Y + i * CELL_SIZE);
+            MoveToEx(hdc, BOARD_START_X, BOARD_START_y +i* CELL_SIZE, NULL);
+            LineTo(hdc, boardEnd, BOARD_START_y + i * CELL_SIZE);
         }
 
         // 사용한 GDI 객체 반환
