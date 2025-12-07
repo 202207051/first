@@ -23,7 +23,7 @@ typedef int SudokuGrid[GRID_SIZE][GRID_SIZE];
 
 // 게임 상태 변수
 int selectedRow = -1; // 현재 행이 선택되지 않음
-int selectedCOl = -1; // 현재 열이 선택되지 않음
+int selectedCol = -1; // 현재 열이 선택되지 않음
 
 // 4 * 4 문제
 SudokuGrid initalPuzzle{
@@ -212,7 +212,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             y >= BOARD_START_y && y < BOARD_START_y + boardHeight)
         {
             // 픽셀 좌표를 행(Row)과 열(Col) 인덱스로 변환
-            selectedCOl = (x - BOARD_START_X) / CELL_SIZE;
+            selectedCol = (x - BOARD_START_X) / CELL_SIZE;
             selectedRow = (y - BOARD_START_y) / CELL_SIZE;
 
             // 창 다시 그리기
@@ -221,7 +221,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         else
         {
             // 보드판 밖의 영역 클릭 처리
-            selectedCOl = -1;
+            selectedCol = -1;
             selectedRow = -1;
 
             // 창 다시 그리기
@@ -231,28 +231,25 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CHAR:
     {
-        // 셀이 선택되었는지 확인
-        if (selectedRow != -1 && selectedCOl != -1)
+        // 1. 셀이 선택되었는지 확인 (필수)
+        if (selectedRow != -1 && selectedCol != -1)
         {
-            // 선택된 칸이 질문칸인지 확인
-            BOOL isQuestionCell = (initalPuzzle[selectedRow][selectedCOl] != 0);
-
-            // 문제칸 입력 처리
-            if (!isQuestionCell)
+            // 2. 선택된 칸이 초기 문제 칸이 아닌지 확인 (입력 가능한 칸인지)
+            if (initalPuzzle[selectedRow][selectedCol] == 0)
             {
                 int inputNum = -1;
 
-                // 1 ~ 4 숫자값 입력 처리
+                // 3. 1 ~ 4 숫자값 입력 처리
                 if (wParam >= '1' && wParam <= '4')
                 {
                     inputNum = wParam - '0';
                 }
 
-                // 유효한 숫자(1 ~ 4)가 입력된 경우
-                if(inputNum!=-1)
+                // 4. 유효한 숫자(1 ~ 4)가 입력된 경우
+                if (inputNum != -1)
                 {
-                    currentGame[selectedRow][selectedCOl]=inputNum;
-                    InvalidateRect(hWnd,NULL,TRUE);
+                    currentGame[selectedRow][selectedCol] = inputNum;
+                    InvalidateRect(hWnd, NULL, TRUE);
                 }
             }
         }
@@ -260,12 +257,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_KEYDOWN:
     {
-        // 지우기 처리
-        if (wParam == VK_BACK || wParam == DELETE)
+        // 1. 셀이 선택되었는지 확인 (필수)
+        if (selectedRow != -1 && selectedCol != -1)
         {
-            currentGame[selectedRow][selectedCOl]=0;
-            InvalidateRect(hWnd,NULL,TRUE);
-            break;
+            // 2. 지우기 처리 (BACKSPACE 또는 DELETE 키)
+            if (wParam == VK_BACK || wParam == VK_DELETE)
+            {
+                // 3. 선택된 칸이 초기 문제 칸이 아닌지 확인 (지우기 가능한 칸인지)
+                if (initalPuzzle[selectedRow][selectedCol] == 0)
+                {
+                    // 문제 칸이 아니면 값을 0(빈칸)으로 설정하여 지움
+                    currentGame[selectedRow][selectedCol] = 0;
+                    InvalidateRect(hWnd, NULL, TRUE);
+                }
+            }
         }
     }
     break;
@@ -305,7 +310,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         int button_y = boardEnd_y + 20;                         // 보드판 아래 20픽셀 떨어진 곳
 
         // 버튼 생성
-        g_button = CreateWindow(L"BUtton", L"checkAnser", WS_CHILD | WS_VISIBLE, BOARD_START_X, button_y, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
+        g_button = CreateWindow(L"BUtton", L"checkAnswer", WS_CHILD | WS_VISIBLE, BOARD_START_X, button_y, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
     }
     break;
     case WM_PAINT:
@@ -330,7 +335,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int y2 = y1 + CELL_SIZE;
 
                 // 선택된 셀 강조
-                if (i == selectedRow && j == selectedCOl)
+                if (i == selectedRow && j == selectedCol)
                 {
                     HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255));
                     RECT cellRect = {x1 + 1, y1 + 1, x2, y2};
