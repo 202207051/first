@@ -1,77 +1,116 @@
-﻿// test.cpp : 애플리케이션에 대한 진입점을 정의합니다.
-//
-
-#include "framework.h"
+﻿#include "framework.h"
 #include "test.h"
-#include <stdio.h> // swprintf_s 사용을 위함
+#include <stdio.h> // swprintf_s를 사용하기위함
 
 #define MAX_LOADSTRING 100
 
-// hMenu를 위한 ID값 선언
+// checkAnswer 버튼 ID 정의
 #define IDM_BTN_CLICK 999
 
-// 스도쿠 관련 전역 상수 및 변수 선언
-const int GRID_SIZE = 4;
+// 초기값은 4 * 4 모드
+int g_currentMode = 4;
 
-// 셀 크기 및 모드 시작 위치
-const int CELL_SIZE = 70;
-const int BOARD_START_X = 20; // 현재 선택된 행(-1 : 선택되지 않음)
-const int BOARD_START_y = 20; // 현재 선택된 열(-1 : 선택되지 않음)
+const int CELL_SIZE_4x4 = 70; // 4 * 4 모드에서 셀의 크기 정의
+const int CELL_SIZE_9x9 = 40; // 9 * 9 모드에서 셀의 크기 정의
+const int BOARD_START_X = 20; // 스도쿠 보드가 시작되는 x 좌표 정의
+const int BOARD_START_y = 20; // 스도쿠 보드가 시작되는 y 좌표 정의
 
-// SudokuGrid 자료형 선언
-typedef int SudokuGrid[GRID_SIZE][GRID_SIZE];
+// 최대 그리드 크기 (9) 정의
+#define MAX_GRID_SIZE 9
 
-// 게임 상태 변수
-int selectedRow = -1; // 현재 행이 선택되지 않음
-int selectedCol = -1; // 현재 열이 선택되지 않음
+// 스도쿠 그리드 (9 * 9) 정의
+typedef int SudokuGrid[MAX_GRID_SIZE][MAX_GRID_SIZE];
 
-// 4 * 4 문제
-SudokuGrid initalPuzzle{
+int selectedRow = -1; // (-1 : 선택되지 않음)
+int selectedCol = -1; // (-1 : 선택되지 않음)
+
+// 4 * 4 문제 (정답 확인 시 이제 이 배열은 사용되지 않음)
+SudokuGrid initialPuzzle4x4
+{
     {1, 0, 0, 3},
     {0, 4, 1, 0},
     {4, 0, 0, 1},
-    {0, 1, 3, 0}};
+    {0, 1, 3, 0}
+};
 
-// 4 * 4 정답
-SudokuGrid solutionPuzzle{
+// 4 * 4 정답 (정답 확인 시 이제 이 배열은 사용되지 않음)
+SudokuGrid solutionPuzzle4x4
+{
     {1, 2, 4, 3},
     {3, 4, 1, 2},
     {4, 3, 2, 1},
-    {2, 1, 3, 4}};
+    {2, 1, 3, 4}
+};
 
-// 플레이어가 입력한 값
+// 9 * 9 문제 (정답 확인 시 이제 이 배열은 사용되지 않음)
+SudokuGrid initialPuzzle9x9
+{
+    {5, 3, 0, 0, 7, 0, 0, 0, 0},
+    {6, 0, 0, 1, 9, 5, 0, 0, 0},
+    {0, 9, 8, 0, 0, 0, 0, 6, 0},
+    {8, 0, 0, 0, 6, 0, 0, 0, 3},
+    {4, 0, 0, 8, 0, 3, 0, 0, 1},
+    {7, 0, 0, 0, 2, 0, 0, 0, 6},
+    {0, 6, 0, 0, 0, 0, 2, 8, 0},
+    {0, 0, 0, 4, 1, 9, 0, 0, 5},
+    {0, 0, 0, 0, 8, 0, 0, 7, 9}
+};
+
+// 9 * 9 정답 (정답 확인 시 이제 이 배열은 사용되지 않음)
+SudokuGrid solutionPuzzle9x9
+{
+    {5, 3, 4, 6, 7, 8, 9, 1, 2},
+    {6, 7, 2, 1, 9, 5, 3, 4, 8},
+    {1, 9, 8, 3, 4, 2, 5, 6, 7},
+    {8, 5, 9, 7, 6, 1, 4, 2, 3},
+    {4, 2, 6, 8, 5, 3, 7, 9, 1},
+    {7, 1, 3, 9, 2, 4, 8, 5, 6},
+    {9, 6, 1, 5, 3, 7, 2, 8, 4},
+    {2, 8, 7, 4, 1, 9, 6, 3, 5},
+    {3, 4, 5, 2, 8, 6, 1, 7, 9}
+};
+
+// 사용자의 입력값 저장
 SudokuGrid currentGame;
 
-// initializeGame() 함수의 원형
+// 현재 모드의 초기 퍼즐 복사하여 저장하는 임시 그리드
+SudokuGrid g_tempInitialPuzzle;
+
+// 현재 모드의 정답 퍼즐을 복사하여 저장하는 임시 그리드 (checkAnswer 수정으로 인해 현재는 사용되지 않음)
+SudokuGrid g_tempSolutionPuzzle;
+
+int getCurrentGridSize();          // 현재 그리드 크기값 반환 함수
+int getCurrentCellSize();          // 현재 셀 크기값 반환 함수
+void setGameMode(int newMode);     // 게임 모드 변경 후 게임 초기화 함수
+void setButtonPosition(HWND hWnd); // checkAnswer 버튼 위치 설정 함수
+
+// currentGame 및 임시 퍼즐 그르 초기화
 void initializeGame();
 
-// 전역 변수:
-HINSTANCE hInst;                     // 현재 인스턴스입니다.
-WCHAR szTitle[MAX_LOADSTRING];       // 제목 표시줄 텍스트입니다.
-WCHAR szWindowClass[MAX_LOADSTRING]; // 기본 창 클래스 이름입니다.
+// 스도쿠 규칙 검사를 위한 헬퍼 함수 추가
+BOOL isSafe(SudokuGrid grid, int row, int col, int num, int size);
 
-// 이 코드 모듈에 포함된 함수의 선언을 전달합니다:
+HINSTANCE hInst;
+WCHAR szTitle[MAX_LOADSTRING];
+WCHAR szWindowClass[MAX_LOADSTRING];
+
 ATOM MyRegisterClass(HINSTANCE hInstance);
 BOOL InitInstance(HINSTANCE, int);
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK About(HWND, UINT, WPARAM, LPARAM);
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
-                      _In_opt_ HINSTANCE hPrevInstance,
-                      _In_ LPWSTR lpCmdLine,
-                      _In_ int nCmdShow)
+    _In_opt_ HINSTANCE hPrevInstance,
+    _In_ LPWSTR lpCmdLine,
+    _In_ int nCmdShow)
 {
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(lpCmdLine);
 
-    // TODO: 여기에 코드를 입력합니다.
-
-    // 전역 문자열을 초기화합니다.
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_TEST, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
-    // 애플리케이션 초기화를 수행합니다:
     if (!InitInstance(hInstance, nCmdShow))
     {
         return FALSE;
@@ -81,7 +120,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     MSG msg;
 
-    // 기본 메시지 루프입니다:
     while (GetMessage(&msg, nullptr, 0, 0))
     {
         if (!TranslateAccelerator(msg.hwnd, hAccelTable, &msg))
@@ -94,11 +132,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     return (int)msg.wParam;
 }
 
-//
-//  함수: MyRegisterClass()
-//
-//  용도: 창 클래스를 등록합니다.
-//
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
     WNDCLASSEXW wcex;
@@ -120,29 +153,18 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
     return RegisterClassExW(&wcex);
 }
 
-//
-//   함수: InitInstance(HINSTANCE, int)
-//
-//   용도: 인스턴스 핸들을 저장하고 주 창을 만듭니다.
-//
-//   주석:
-//
-//        이 함수를 통해 인스턴스 핸들을 전역 변수에 저장하고
-//        주 프로그램 창을 만든 다음 표시합니다.
-//
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
-    hInst = hInstance; // 인스턴스 핸들을 전역 변수에 저장합니다.
+    hInst = hInstance;
 
     HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-                              CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, nullptr, nullptr, hInstance, nullptr);
 
     if (!hWnd)
     {
         return FALSE;
     }
 
-    // 게임 초기화 함수 선언
     initializeGame();
 
     ShowWindow(hWnd, nCmdShow);
@@ -151,47 +173,174 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     return TRUE;
 }
 
-//
-//  함수: WndProc(HWND, UINT, WPARAM, LPARAM)
-//
-//  용도: 주 창의 메시지를 처리합니다.
-//
-//  WM_COMMAND  - 애플리케이션 메뉴를 처리합니다.
-//  WM_PAINT    - 주 창을 그립니다.
-//  WM_DESTROY  - 종료 메시지를 게시하고 반환합니다.
-//
-//
-
-// initializeGame() 함수 선언
+// initializeGame() : 게임 데이터 초기화
 void initializeGame()
 {
-    for (int i = 0; i < GRID_SIZE; i++)
+    int size = getCurrentGridSize();
+
+    // 현재 모드에 따라 초기 퍼즐과 정답 퍼즐 복사
+    if (size == 4)
     {
-        for (int j = 0; j < GRID_SIZE; j++)
-            // 4 * 4문제를 현재 게임 보드에 복사
-            currentGame[i][j] = initalPuzzle[i][j];
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                g_tempInitialPuzzle[i][j] = initialPuzzle4x4[i][j];
+                g_tempSolutionPuzzle[i][j] = solutionPuzzle4x4[i][j];
+
+                // 현재 게임 상태를 초기 퍼즐로 설정
+                currentGame[i][j] = g_tempInitialPuzzle[i][j];
+            }
+        }
+    }
+    else
+    {
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                g_tempInitialPuzzle[i][j] = initialPuzzle9x9[i][j];
+                g_tempSolutionPuzzle[i][j] = solutionPuzzle9x9[i][j];
+                currentGame[i][j] = g_tempInitialPuzzle[i][j];
+            }
+        }
     }
 }
 
-// 정답 확인
-BOOL checkAnswer()
+// isSafe() : 스도쿠 규칙 맞는지 확인
+BOOL isSafe(SudokuGrid grid, int row, int col, int num, int size)
 {
-    for (int i = 0; i < GRID_SIZE; i++)
+    // 같은 행에 num이 있는지 확인 (현재 셀 제외)
+    for (int i = 0; i < size; i++)
     {
-        for (int j = 0; j < GRID_SIZE; j++)
+        if (grid[row][i] == num && i != col)
         {
-            // 빈칸이나 오답일 경우
-            if (currentGame[i][j] != solutionPuzzle[i][j])
+            return FALSE;
+        }
+    }
+
+    // 같은 열에 num이 있는지 확인 (현재 셀 제외)
+    for (int j = 0; j < size; j++)
+    {
+        if (grid[j][col] == num && j != row)
+        {
+            return FALSE;
+        }
+    }
+
+    // 3. 3x3 (또는 2x2) 블록에 num이 있는지 확인 (현재 셀 제외)
+    int block_size;
+    if (size == 4)
+    {
+        block_size = 2; // 4x4 모드는 2x2 블록 사용
+    }
+    else // size == 9 인 경우
+    {
+        block_size = 3; // 9x9 모드는 3x3 블록 사용
+    }
+
+    int startRow = row - row % block_size;
+    int startCol = col - col % block_size;
+
+    for (int r = 0; r < block_size; r++)
+    {
+        for (int c = 0; c < block_size; c++)
+        {
+            if (grid[startRow + r][startCol + c] == num && (startRow + r) != row && (startCol + c) != col)
             {
                 return FALSE;
             }
         }
     }
+
     return TRUE;
 }
 
-// 정답 확인 버튼
+// checkAnswer() : 정답 확인 (스도쿠 규칙 검사 방식)
+BOOL checkAnswer()
+{
+    int size = getCurrentGridSize();
+
+    // 1. 모든 셀이 채워져 있는지 확인 (완성도 검사)
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            if (currentGame[i][j] == 0)
+            {
+                // 빈 칸이 남아있다면 정답이 아님
+                return FALSE;
+            }
+        }
+    }
+
+    // 모든 채워진 숫자가 스도쿠 규칙을 만족하는지 확인 (유효성 검사)
+    for (int i = 0; i < size; i++)
+    {
+        for (int j = 0; j < size; j++)
+        {
+            // 현재 셀의 숫자가 스도쿠 규칙을 위반하는지 isSafe로 확인
+            // isSafe는 현재 셀의 숫자를 제외하고 규칙을 위반하는지 확인
+            if (!isSafe(currentGame, i, j, currentGame[i][j], size))
+            {
+                // 규칙 위반 (오답)
+                return FALSE;
+            }
+        }
+    }
+
+    // 3. 모든 셀이 채워졌고, 규칙을 만족함 (정답)
+    return TRUE;
+}
+
+// 헬퍼 함수 정의
+int getCurrentGridSize() // 현재 스도쿠 보드의 그리드 크기 반환
+{
+    return g_currentMode;
+}
+
+int getCurrentCellSize() // 현재 모드에 해당하는 개별 셀의 크기 반환
+{
+    if (g_currentMode == 4)
+    {
+        return CELL_SIZE_4x4;
+    }
+    else
+    {
+        return CELL_SIZE_9x9;
+    }
+}
+
+// 게임 모드를 새로운 크기로 설정하고, 해당 모드에 맞춰 게임을 다시 시작
+void setGameMode(int newMode)
+{
+    g_currentMode = newMode;
+    initializeGame();
+}
+
+// checkAnswer 버튼 핸들
 HWND g_button;
+
+void setButtonPosition(HWND hWnd)
+{
+    int size = getCurrentGridSize();
+    int cell = getCurrentCellSize();
+
+    // 보드 끝 y좌표 계산
+    int boardEnd_y = BOARD_START_y + size * cell;
+
+    // 버튼 y좌표를 보드 아래 + 20 픽셀로 설정
+    int button_y = boardEnd_y + 20;
+
+    // 버튼의 위치와 크기 설정
+    SetWindowPos(g_button,
+        NULL,
+        BOARD_START_X, // 보드와 같은 x위치
+        button_y,
+        200, // 버튼 너비
+        40,  // 버튼 높이
+        SWP_NOZORDER);
+}
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -199,55 +348,57 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     case WM_LBUTTONDOWN:
     {
-        // 클릭된 마우스 좌표
-        int x = LOWORD(lParam);
-        int y = HIWORD(lParam);
+        int x = LOWORD(lParam); // 마우스 클릭 x좌표
+        int y = HIWORD(lParam); // 마우스 클릭 y좌표
 
-        // 보드판 크기
-        int boardWidth = GRID_SIZE * CELL_SIZE;
-        int boardHeight = GRID_SIZE * CELL_SIZE;
+        int size = getCurrentGridSize();
+        int cell = getCurrentCellSize();
 
-        // 클릭이 보드판 영역에 있는지 확인
+        int boardWidth = size * cell;
+        int boardHeight = size * cell;
+
+        // 클릭 위치가 보드 영역 내에 있는지 확인
         if (x >= BOARD_START_X && x < BOARD_START_X + boardWidth &&
             y >= BOARD_START_y && y < BOARD_START_y + boardHeight)
         {
-            // 픽셀 좌표를 행(Row)과 열(Col) 인덱스로 변환
-            selectedCol = (x - BOARD_START_X) / CELL_SIZE;
-            selectedRow = (y - BOARD_START_y) / CELL_SIZE;
+            // 클릭한 위치에 해당하는 행과 열 계산
+            selectedCol = (x - BOARD_START_X) / cell;
+            selectedRow = (y - BOARD_START_y) / cell;
 
-            // 창 다시 그리기
+            // 윈도우 다시 그리기
             InvalidateRect(hWnd, NULL, TRUE);
         }
         else
         {
-            // 보드판 밖의 영역 클릭 처리
+            // 보드 밖을 클릭시 선택 해제
             selectedCol = -1;
             selectedRow = -1;
 
-            // 창 다시 그리기
             InvalidateRect(hWnd, NULL, TRUE);
         }
     }
     break;
+
     case WM_CHAR:
     {
-        // 1. 셀이 선택되었는지 확인 (필수)
+        // 셀이 선택된 경우
         if (selectedRow != -1 && selectedCol != -1)
         {
-            // 2. 선택된 칸이 초기 문제 칸이 아닌지 확인 (입력 가능한 칸인지)
-            if (initalPuzzle[selectedRow][selectedCol] == 0)
+            // 초기 퍼즐에서 값이 0인 셀만 수정 가능
+            if (g_tempInitialPuzzle[selectedRow][selectedCol] == 0)
             {
+                int size = getCurrentGridSize();
                 int inputNum = -1;
 
-                // 3. 1 ~ 4 숫자값 입력 처리
-                if (wParam >= '1' && wParam <= '4')
+                // 입력된 문자가 현재 모드의 유효한 숫자 법위인지 검사
+                if (wParam >= '1' && wParam <= ('0' + size))
                 {
                     inputNum = wParam - '0';
                 }
 
-                // 4. 유효한 숫자(1 ~ 4)가 입력된 경우
                 if (inputNum != -1)
                 {
+                    // 현재 게임 상태 업데이트
                     currentGame[selectedRow][selectedCol] = inputNum;
                     InvalidateRect(hWnd, NULL, TRUE);
                 }
@@ -255,18 +406,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
+
     case WM_KEYDOWN:
     {
-        // 1. 셀이 선택되었는지 확인 (필수)
+        // 셀이 선택된 경우
         if (selectedRow != -1 && selectedCol != -1)
         {
-            // 2. 지우기 처리 (BACKSPACE 또는 DELETE 키)
+            // Backspace 또는 Delete 키가 눌렀는지 확인
             if (wParam == VK_BACK || wParam == VK_DELETE)
             {
-                // 3. 선택된 칸이 초기 문제 칸이 아닌지 확인 (지우기 가능한 칸인지)
-                if (initalPuzzle[selectedRow][selectedCol] == 0)
+                // 초기 퍼즐값이 0인 셀만 지우기
+                if (g_tempInitialPuzzle[selectedRow][selectedCol] == 0)
                 {
-                    // 문제 칸이 아니면 값을 0(빈칸)으로 설정하여 지움
+                    // 현재 셀을 0으로 설정
                     currentGame[selectedRow][selectedCol] = 0;
                     InvalidateRect(hWnd, NULL, TRUE);
                 }
@@ -274,22 +426,43 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
+
     case WM_COMMAND:
     {
         int wmId = LOWORD(wParam);
-        // 메뉴 선택을 구문 분석합니다:
         switch (wmId)
         {
         case IDM_BTN_CLICK:
         {
-            // 플레이어가 입력한 값 정답확인 버튼
+            // checkAnswer() 함수 호출
             if (checkAnswer())
             {
                 MessageBox(hWnd, L"정답입니다", L"결과", MB_OK);
             }
             else
             {
-                MessageBox(hWnd, L"오답입니다", L"결과", MB_OK);
+                // checkAnswer()는 오답 외에 '빈 칸'이 있어도 FALSE를 반환합니다.
+                MessageBox(hWnd, L"오답이거나 빈 칸이 남아있습니다", L"결과", MB_OK);
+            }
+        }
+        break;
+        case IDM_MODE_4X4:
+        {
+            if (g_currentMode != 4)
+            {
+                setGameMode(4);
+                setButtonPosition(hWnd); // 버튼 위치 재설정
+                InvalidateRect(hWnd, NULL, TRUE);
+            }
+        }
+        break;
+        case IDM_MODE_9X9:
+        {
+            if (g_currentMode != 9)
+            {
+                setGameMode(9);
+                setButtonPosition(hWnd); // 버튼 위치 재설정
+                InvalidateRect(hWnd, NULL, TRUE);
             }
         }
         break;
@@ -306,39 +479,59 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_CREATE:
     {
-        int boardEnd_y = BOARD_START_y + GRID_SIZE * CELL_SIZE; // 보드판 끝 y 좌표
-        int button_y = boardEnd_y + 20;                         // 보드판 아래 20픽셀 떨어진 곳
-
-        // 버튼 생성
-        g_button = CreateWindow(L"BUtton", L"checkAnswer", WS_CHILD | WS_VISIBLE, BOARD_START_X, button_y, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
+        // checkAnswer 버튼 생성
+        g_button = CreateWindow(L"Button", L"checkAnswer", WS_CHILD | WS_VISIBLE,
+            0, 0, 200, 40, hWnd, (HMENU)IDM_BTN_CLICK, hInst, NULL);
+        setButtonPosition(hWnd); // 버튼 위치 초기 설정
     }
     break;
+    case WM_SIZE:
+    {
+        setButtonPosition(hWnd); // 윈도우 크기가 변하면 버튼 위치도 다시 설정
+    }
+    break;
+
     case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
-        // TODO: 여기에 hdc를 사용하는 그리기 코드를 추가합니다...
 
-        // 펜 / 브러시
-        HPEN hThinPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100)); // 얇은 회색선
-        HPEN hThickPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));      // 두꺼운 검은색선
-        HPEN osPen = (HPEN)SelectObject(hdc, hThinPen);             // 반환 펜
+        int size = getCurrentGridSize();
+        int cell = getCurrentCellSize();
+        int block_size; // 스도쿠 블록 크기
 
-        // 격자 셀 및 숫자 출력
-        for (int i = 0; i < GRID_SIZE; i++)
+        if (size == 4)
         {
-            for (int j = 0; j < GRID_SIZE; j++)
-            {
-                int x1 = BOARD_START_X + j * CELL_SIZE;
-                int y1 = BOARD_START_y + i * CELL_SIZE;
-                int x2 = x1 + CELL_SIZE;
-                int y2 = y1 + CELL_SIZE;
+            block_size = 2;
+        }
+        else
+        {
+            block_size = 3;
+        }
 
-                // 선택된 셀 강조
+        // 펜 생성 : 얇은 선(셀 경계) 및 굵은 선(블록 경계)
+        HPEN hThinPen = CreatePen(PS_SOLID, 1, RGB(100, 100, 100));
+        HPEN hThickPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
+
+        // 현재 DC에 얇은 펜 선택
+        HPEN osPen = (HPEN)SelectObject(hdc, hThinPen);
+
+        // 셀 및 숫자 그리기
+        for (int i = 0; i < size; i++)
+        {
+            for (int j = 0; j < size; j++)
+            {
+                // 셀의 좌표 계산
+                int x1 = BOARD_START_X + j * cell;
+                int y1 = BOARD_START_y + i * cell;
+                int x2 = x1 + cell;
+                int y2 = y1 + cell;
+
+                // 선택된 셀 하이라이트
                 if (i == selectedRow && j == selectedCol)
                 {
-                    HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255));
-                    RECT cellRect = {x1 + 1, y1 + 1, x2, y2};
+                    HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255)); // 선택된 셀 --> 파란색
+                    RECT cellRect = { x1 + 1, y1 + 1, x2, y2 };
                     FillRect(hdc, &cellRect, hBrush);
                     DeleteObject(hBrush);
                 }
@@ -346,48 +539,51 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 // 셀 경계선 그리기(얇은 선)
                 Rectangle(hdc, x1, y1, x2, y2);
 
-                // 숫자 출력
+                // 셀에 숫자가 있으면 그리기
                 if (currentGame[i][j] != 0)
                 {
                     WCHAR buff[32];
-                    swprintf_s(buff, L"%d", currentGame[i][j]); // 숫자를 문자열로 변환
 
-                    RECT rect = {x1, y1, x2, y2};
-                    SetBkMode(hdc, TRANSPARENT); // 배경색 투명
+                    // 숫자를 문자열로 변환
+                    swprintf_s(buff, L"%d", currentGame[i][j]);
 
-                    // 초기 숫자값 == 검은색
-                    if (initalPuzzle[i][j] != 0)
+                    RECT rect = { x1, y1, x2, y2 };
+                    SetBkMode(hdc, TRANSPARENT);
+
+                    // 초기값 --> 검정색, 사용자값 0 --> 파란색
+                    if (g_tempInitialPuzzle[i][j] != 0)
                     {
-                        SetTextColor(hdc, RGB(0, 0, 0));
+                        SetTextColor(hdc, RGB(0, 0, 0)); // 검은색
                     }
-                    // 플레이어가 입력한 숫자값 == 파란색
                     else
                     {
-                        SetTextColor(hdc, RGB(0, 0, 255));
+                        SetTextColor(hdc, RGB(0, 0, 255)); // 파란색
                     }
 
-                    // 셀 중앙에 숫자 출력
+                    // 숫자 중앙 배치
                     DrawText(hdc, buff, -1, &rect, DT_CENTER | DT_SINGLELINE | DT_VCENTER);
                 }
             }
         }
 
-        // 2 * 2 블록 강조선(굵은선)
-        SelectObject(hdc, hThickPen);
-        int boardEnd = BOARD_START_X + GRID_SIZE * CELL_SIZE;
+        // 굵은 블록 경계 선 그리기
+        SelectObject(hdc, hThickPen); // 굵은 펜 선택
+        int boardEnd_X = BOARD_START_X + size * cell;
+        int boardEnd_Y = BOARD_START_y + size * cell;
 
-        // 4 * 4 스도구 블록 강조선
-        for (int i = 0; i <= GRID_SIZE; i += 2)
+        // block_size 간격으로 선 그림
+        for (int i = 0; i <= size; i += block_size)
         {
-            // 수직선
-            MoveToEx(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_y, NULL);
-            LineTo(hdc, BOARD_START_X + i * CELL_SIZE, BOARD_START_y + GRID_SIZE * CELL_SIZE);
-            // 수평선
-            MoveToEx(hdc, BOARD_START_X, BOARD_START_y +i* CELL_SIZE, NULL);
-            LineTo(hdc, boardEnd, BOARD_START_y + i * CELL_SIZE);
+            // 세로 선
+            MoveToEx(hdc, BOARD_START_X + i * cell, BOARD_START_y, NULL);
+            LineTo(hdc, BOARD_START_X + i * cell, boardEnd_Y);
+
+            // 가로 선
+            MoveToEx(hdc, BOARD_START_X, BOARD_START_y + i * cell, NULL);
+            LineTo(hdc, boardEnd_X, BOARD_START_y + i * cell);
         }
 
-        // 사용한 GDI 객체 반환
+        // 사용한 GDI 반환
         SelectObject(hdc, osPen);
         DeleteObject(hThinPen);
         DeleteObject(hThickPen);
@@ -404,7 +600,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
-// 정보 대화 상자의 메시지 처리기입니다.
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);

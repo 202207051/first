@@ -2,5 +2,5 @@
 
 #include "resource.h"
 
-#define IDM_GAME_4X4 40001
-#define IDM_GAME_9X9 40002
+#define IDM_MODE_4X4 1000
+#define IDM_MODE_9X9 1001
