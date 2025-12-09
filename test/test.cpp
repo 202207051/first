@@ -186,7 +186,7 @@ void initializeGame()
             for (int j = 0; j < size; j++)
             {
                 g_tempInitialPuzzle[i][j] = initialPuzzle4x4[i][j]; // 4x4 초기 문제 복사
-                //g_tempSolutionPuzzle[i][j] = solutionPuzzle4x4[i][j]; // 정답 복사는 주석 처리됨
+                //g_tempSolutionPuzzle[i][j] = solutionPuzzle4x4[i][j]; // 정답 복사
 
                 // 현재 게임 상태를 초기 퍼즐로 설정
                 currentGame[i][j] = g_tempInitialPuzzle[i][j]; // 현재 게임 상태 초기화
@@ -200,7 +200,7 @@ void initializeGame()
             for (int j = 0; j < size; j++)
             {
                 g_tempInitialPuzzle[i][j] = initialPuzzle9x9[i][j]; // 9x9 초기 문제 복사
-                //g_tempSolutionPuzzle[i][j] = solutionPuzzle9x9[i][j]; // 정답 복사는 주석 처리됨
+                //g_tempSolutionPuzzle[i][j] = solutionPuzzle9x9[i][j]; // 정답 복사는 
                 currentGame[i][j] = g_tempInitialPuzzle[i][j]; // 현재 게임 상태 초기화
             }
         }
@@ -255,7 +255,8 @@ BOOL isSafe(SudokuGrid grid, int row, int col, int num, int size)
     }
 
     return TRUE; // 모든 검사 통과 (안전함)
-}
+} 
+
 
 // checkAnswer() : 정답 확인 (스도쿠 규칙 검사 방식)
 BOOL checkAnswer()
@@ -390,7 +391,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int size = getCurrentGridSize();
                 int inputNum = -1;
 
-                // 입력된 문자가 현재 모드의 유효한 숫자 법위인지 검사 (예: 4x4에서 '1'~'4')
+                // 입력된 문자가 현재 모드의 유효한 숫자 법위인지 검사 
                 if (wParam >= '1' && wParam <= ('0' + size))
                 {
                     inputNum = wParam - '0'; // 문자를 정수로 변환
@@ -398,9 +399,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
                 if (inputNum != -1)
                 {
-                    // 현재 게임 상태 업데이트
-                    currentGame[selectedRow][selectedCol] = inputNum;
-                    InvalidateRect(hWnd, NULL, TRUE); // 화면 업데이트
+                    int originalValue = currentGame[selectedRow][selectedCol];
+
+                    currentGame[selectedRow][selectedCol] = 0;
+
+                    if (isSafe(currentGame, selectedRow, selectedCol, inputNum, size))
+                    {
+                        currentGame[selectedRow][selectedCol] = inputNum;
+                        InvalidateRect(hWnd, NULL, TRUE); 
+                    }
+                    else
+                    {
+                        currentGame[selectedRow][selectedCol] = originalValue;
+                    }
                 }
             }
         }
@@ -420,7 +431,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 {
                     // 현재 셀을 0(빈 칸)으로 설정
                     currentGame[selectedRow][selectedCol] = 0;
-                    InvalidateRect(hWnd, NULL, TRUE); // 화면 업데이트
+                    InvalidateRect(hWnd, NULL, TRUE); 
                 }
             }
         }
@@ -437,11 +448,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // checkAnswer() 함수 호출
             if (checkAnswer())
             {
+                // checkAnswer()는 정답 반환
                 MessageBox(hWnd, L"정답입니다", L"결과", MB_OK);
             }
             else
             {
-                // checkAnswer()는 오답 외에 '빈 칸'이 있어도 FALSE를 반환
+                // checkAnswer()는 오답 반환
                 MessageBox(hWnd, L"오답이거나 빈 칸이 남아있습니다", L"결과", MB_OK);
             }
         }
@@ -530,7 +542,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 // 선택된 셀 여부 확인
                 BOOL isSelected = (i == selectedRow && j == selectedCol);
 
-                // 1. 하이라이트 처리 (FillRect 사용)
+                // 1. 하이라이트 처리 
                 if (isSelected)
                 {
                     HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255)); // 선택된 셀 배경색 (밝은 파랑)
@@ -538,7 +550,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     FillRect(hdc, &cellRect, hBrush); // 영역 채우기
                     DeleteObject(hBrush);
 
-                    // 중요: FillRect 후 Rectangle이 내부를 다시 칠하지 않도록 Null 브러시 선택
+                    // FillRect 후 Rectangle이 내부를 다시 칠하지 않도록 Null 브러시 선택
                     SelectObject(hdc, GetStockObject(NULL_BRUSH));
                 }
                 else // 선택되지 않은 셀의 경우
@@ -551,7 +563,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 // isSelected가 true일 때는 NULL_BRUSH 때문에 내부가 채워지지 않음.
                 Rectangle(hdc, x1, y1, x2, y2);
 
-                // 3. 셀에 숫자가 있으면 그리기 (기존 코드와 동일)
+                // 3. 셀에 숫자가 있으면 그리기
                 if (currentGame[i][j] != 0)
                 {
                     WCHAR buff[32];
@@ -563,7 +575,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     SetBkMode(hdc, TRANSPARENT); // 배경 투명하게 설정
 
                     // 초기값 --> 검정색, 사용자값 0 --> 파란색
-                    if (g_tempInitialPuzzle[i][j] != 0) // 초기 문제가 있는 셀 (고정값)
+                    if (g_tempInitialPuzzle[i][j] != 0) // 초기 문제가 있는 셀 
                     {
                         SetTextColor(hdc, RGB(0, 0, 0)); // 검은색
                     }
@@ -581,7 +593,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         // 브러시 복원: 굵은 선 그리기 전에 (NULL_BRUSH가 선택되어 있다면) 기본 브러시로 복원
         SelectObject(hdc, GetStockObject(WHITE_BRUSH));
 
-        // 굵은 블록 경계 선 그리기 (기존 코드와 동일)
+        // 굵은 블록 경계 선 그리기 
         SelectObject(hdc, hThickPen); // 굵은 펜 선택
         int boardEnd_X = BOARD_START_X + size * cell;
         int boardEnd_Y = BOARD_START_y + size * cell;
@@ -598,7 +610,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             LineTo(hdc, boardEnd_X, BOARD_START_y + i * cell);
         }
 
-        // 사용한 GDI 객체 반환 및 삭제 (기존 코드와 동일)
+        // 사용한 GDI 객체 반환 및 삭제 
         SelectObject(hdc, osPen); // 원래 펜으로 복원
         DeleteObject(hThinPen);
         DeleteObject(hThickPen);
