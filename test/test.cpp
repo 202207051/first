@@ -242,12 +242,12 @@ BOOL isSafe(SudokuGrid grid, int row, int col, int num, int size)
     int startRow = row - row % block_size; // 현재 블록의 시작 행 계산
     int startCol = col - col % block_size; // 현재 블록의 시작 열 계산
 
-    for (int r = 0; r < block_size; r++)
+    for (int k = 0; k < block_size; k++)
     {
-        for (int c = 0; c < block_size; c++)
+        for (int l = 0; l < block_size; l++)
         {
             // 블록 내에서 같은 숫자가 있고, 현재 셀 위치가 아닌 경우
-            if (grid[startRow + r][startCol + c] == num && (startRow + r) != row && (startCol + c) != col)
+            if (grid[startRow + k][startCol + l] == num && (startRow + k) != row && (startCol + l) != col)
             {
                 return FALSE; // 규칙 위반
             }
