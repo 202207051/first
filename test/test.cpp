@@ -491,7 +491,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     }
     break;
 
-    case WM_PAINT: 
+    case WM_PAINT:
     {
         PAINTSTRUCT ps;
         HDC hdc = BeginPaint(hWnd, &ps);
@@ -527,19 +527,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 int x2 = x1 + cell;
                 int y2 = y1 + cell;
 
-                // 선택된 셀 하이라이트
-                if (i == selectedRow && j == selectedCol)
+                // 선택된 셀 여부 확인
+                BOOL isSelected = (i == selectedRow && j == selectedCol);
+
+                // 1. 하이라이트 처리 (FillRect 사용)
+                if (isSelected)
                 {
                     HBRUSH hBrush = CreateSolidBrush(RGB(200, 200, 255)); // 선택된 셀 배경색 (밝은 파랑)
                     RECT cellRect = { x1 + 1, y1 + 1, x2, y2 }; // 펜 굵기를 고려하여 영역 지정
                     FillRect(hdc, &cellRect, hBrush); // 영역 채우기
                     DeleteObject(hBrush);
+
+                    // 중요: FillRect 후 Rectangle이 내부를 다시 칠하지 않도록 Null 브러시 선택
+                    SelectObject(hdc, GetStockObject(NULL_BRUSH));
+                }
+                else // 선택되지 않은 셀의 경우
+                {
+                    // Rectangle이 기본 배경색(흰색)으로 내부를 채우도록 WHITE_BRUSH 선택
+                    SelectObject(hdc, GetStockObject(WHITE_BRUSH));
                 }
 
-                // 셀 경계선 그리기(얇은 선)
+                // 2. 셀 경계선 그리기(얇은 선)
+                // isSelected가 true일 때는 NULL_BRUSH 때문에 내부가 채워지지 않음.
                 Rectangle(hdc, x1, y1, x2, y2);
 
-                // 셀에 숫자가 있으면 그리기
+                // 3. 셀에 숫자가 있으면 그리기 (기존 코드와 동일)
                 if (currentGame[i][j] != 0)
                 {
                     WCHAR buff[32];
@@ -557,7 +569,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                     }
                     else // 사용자가 입력한 셀
                     {
-                        SetTextColor(hdc, RGB(0, 0, 255)); // 파란색
+                        SetTextColor(hdc, RGB(255, 0, 0)); // 빨간색
                     }
 
                     // 숫자 중앙 배치
@@ -566,7 +578,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             }
         }
 
-        // 굵은 블록 경계 선 그리기
+        // 브러시 복원: 굵은 선 그리기 전에 (NULL_BRUSH가 선택되어 있다면) 기본 브러시로 복원
+        SelectObject(hdc, GetStockObject(WHITE_BRUSH));
+
+        // 굵은 블록 경계 선 그리기 (기존 코드와 동일)
         SelectObject(hdc, hThickPen); // 굵은 펜 선택
         int boardEnd_X = BOARD_START_X + size * cell;
         int boardEnd_Y = BOARD_START_y + size * cell;
@@ -583,12 +598,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             LineTo(hdc, boardEnd_X, BOARD_START_y + i * cell);
         }
 
-        // 사용한 GDI 객체 반환 및 삭제
+        // 사용한 GDI 객체 반환 및 삭제 (기존 코드와 동일)
         SelectObject(hdc, osPen); // 원래 펜으로 복원
         DeleteObject(hThinPen);
         DeleteObject(hThickPen);
 
-        EndPaint(hWnd, &ps); 
+        EndPaint(hWnd, &ps);
     }
     break;
     case WM_DESTROY: 
